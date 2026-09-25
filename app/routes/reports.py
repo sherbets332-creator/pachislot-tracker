@@ -39,6 +39,25 @@ def index():
         """
     ).fetchall()
 
+    # 収支推移グラフ用：全期間の月別収支と、その累計を古い順に用意する
+    monthly_history = db.execute(
+        f"""
+        SELECT substr(play_date, 1, 7) AS ym, SUM({DISPLAY_PROFIT}) AS total
+        FROM records
+        GROUP BY ym
+        ORDER BY ym ASC
+        """
+    ).fetchall()
+    chart_labels = []
+    chart_monthly_totals = []
+    chart_cumulative_totals = []
+    running_total = 0
+    for row in monthly_history:
+        running_total += row["total"] or 0
+        chart_labels.append(row["ym"])
+        chart_monthly_totals.append(row["total"] or 0)
+        chart_cumulative_totals.append(running_total)
+
     by_machine = db.execute(
         f"""
         SELECT m.name AS machine_name,
@@ -86,5 +105,7 @@ def index():
         "reports/index.html",
         yearly=yearly, monthly=monthly, by_machine=by_machine, by_shop=by_shop,
         cashout_by_shop=cashout_by_shop, other_adjustments=other_adjustments,
+        chart_labels=chart_labels, chart_monthly_totals=chart_monthly_totals,
+        chart_cumulative_totals=chart_cumulative_totals,
         active_nav="reports",
     )

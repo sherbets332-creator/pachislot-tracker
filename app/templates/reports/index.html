@@ -3,6 +3,17 @@
 {% block content %}
 <h1 class="h4 mb-3">収支分析</h1>
 
+<h2 class="h6">収支推移（月別・累計）</h2>
+{% if chart_labels %}
+<div class="card mb-4">
+    <div class="card-body">
+        <canvas id="profit-trend-chart" height="220"></canvas>
+    </div>
+</div>
+{% else %}
+<p class="text-muted small mb-4">記録がありません。</p>
+{% endif %}
+
 <h2 class="h6">年別集計</h2>
 <div class="table-responsive mb-4">
 <table class="table table-sm">
@@ -86,5 +97,51 @@
     <li>{{ o['shop_name'] }}：{{ o['total'] }}円</li>
     {% endfor %}
 </ul>
+{% endif %}
+
+{% if chart_labels %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+(function () {
+    var labels = {{ chart_labels | tojson }};
+    var monthlyTotals = {{ chart_monthly_totals | tojson }};
+    var cumulativeTotals = {{ chart_cumulative_totals | tojson }};
+    var barColors = monthlyTotals.map(function (v) { return v >= 0 ? '#0d6efd' : '#dc3545'; });
+
+    var ctx = document.getElementById('profit-trend-chart').getContext('2d');
+    new Chart(ctx, {
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    type: 'bar',
+                    label: '月別収支（円）',
+                    data: monthlyTotals,
+                    backgroundColor: barColors,
+                    yAxisID: 'y'
+                },
+                {
+                    type: 'line',
+                    label: '累計収支（円）',
+                    data: cumulativeTotals,
+                    borderColor: '#212529',
+                    backgroundColor: '#212529',
+                    tension: 0.2,
+                    pointRadius: 2,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                y: { position: 'left', title: { display: true, text: '月別（円）' } },
+                y1: { position: 'right', title: { display: true, text: '累計（円）' }, grid: { drawOnChartArea: false } }
+            }
+        }
+    });
+})();
+</script>
 {% endif %}
 {% endblock %}

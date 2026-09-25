@@ -20,6 +20,17 @@
     </div>
 </div>
 
+<h2 class="h6">貯玉残高の推移</h2>
+{% if chart_labels %}
+<div class="card mb-4">
+    <div class="card-body">
+        <canvas id="balance-trend-chart" height="200"></canvas>
+    </div>
+</div>
+{% else %}
+<p class="text-muted small mb-4">まだ貯玉の増減履歴がありません。</p>
+{% endif %}
+
 <h2 class="h6">換金差額調整履歴</h2>
 {% if adjustments %}
 <div class="table-responsive mb-4">
@@ -63,4 +74,38 @@
     </tbody>
 </table>
 </div>
+
+{% if chart_labels %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+(function () {
+    var labels = {{ chart_labels | tojson }};
+    var values = {{ chart_values | tojson }};
+
+    var ctx = document.getElementById('balance-trend-chart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '貯玉残高（枚）',
+                data: values,
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.15)',
+                fill: true,
+                stepped: true,
+                tension: 0,
+                pointRadius: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true, title: { display: true, text: '枚' } }
+            }
+        }
+    });
+})();
+</script>
+{% endif %}
 {% endblock %}

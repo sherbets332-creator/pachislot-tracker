@@ -70,6 +70,36 @@ def get_balance(db: sqlite3.Connection, shop_id: int) -> int:
     return int(row["balance"] or 0)
 
 
+def get_balance_history(db: sqlite3.Connection, shop_id: int) -> list[tuple[str, int]]:
+    """貯玉推移グラフ用：日付ごとの残高（その日の最後の取引が終わった時点の残高）を古い順に返す。
+
+    同じ日に複数の取引があっても、その日1件（最終的な残高）にまとめる。
+    """
+    rows = db.execute(
+        """
+        SELECT transaction_date, transaction_type, ball_count
+        FROM saved_ball_transactions
+        WHERE shop_id = ?
+        ORDER BY transaction_date ASC, id ASC
+        """,
+        (shop_id,),
+    ).fetchall()
+
+    balance = 0
+    balance_by_date: dict[str, int] = {}
+    for row in rows:
+        ttype = row["transaction_type"]
+        if ttype == "earn":
+            balance += row["ball_count"]
+        elif ttype in ("use", "cashout"):
+            balance -= row["ball_count"]
+        elif ttype == "adjust":
+            balance += row["ball_count"]  # 符号付きのためそのまま加算
+        balance_by_date[row["transaction_date"]] = balance
+
+    return list(balance_by_date.items())
+
+
 def get_ledger(db: sqlite3.Connection, shop_id: int) -> list[sqlite3.Row]:
     """店舗の貯玉増減履歴を時系列で取得する（記録の機種名も一緒に）。"""
     return db.execute(

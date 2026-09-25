@@ -103,6 +103,9 @@ def detail(shop_id: int):
     shop = db.execute("SELECT * FROM shops WHERE id = ?", (shop_id,)).fetchone()
     balance = saved_ball_ledger.get_balance(db, shop_id)
     ledger = saved_ball_ledger.get_ledger(db, shop_id)
+    balance_history = saved_ball_ledger.get_balance_history(db, shop_id)
+    chart_labels = [d for d, _ in balance_history]
+    chart_values = [v for _, v in balance_history]
     adjustments = db.execute(
         """
         SELECT rra.*, m.name AS machine_name, r.play_date AS record_play_date
@@ -120,6 +123,8 @@ def detail(shop_id: int):
         balance=balance,
         ledger=ledger,
         adjustments=adjustments,
+        chart_labels=chart_labels,
+        chart_values=chart_values,
         active_nav="shops",
     )
 

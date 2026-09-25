@@ -7,16 +7,20 @@
 venvは作成済み・Flaskはインストール済みです。DBを初期化する場合：
 
 ```
-cd C:\AI\ClaudeProjects\pachislot-tracker
+cd C:\Users\sherb\mulmoclaude\github\pachislot-tracker
 venv\Scripts\python -m flask --app run.py init-db
 ```
+
+別PCで新しくcloneした場合は、先に `python -m venv venv` → `venv\Scripts\pip install -r requirements.txt` でvenvを作り直してから上記を実行する。
 
 ## 起動方法
 
 ```
-cd C:\AI\ClaudeProjects\pachislot-tracker
+cd C:\Users\sherb\mulmoclaude\github\pachislot-tracker
 venv\Scripts\python run.py
 ```
+
+デスクトップの `Mulmo_Start.bat` / `Mulmo_End.bat` を使う場合は、起動時に自動で `git pull`、終了時に自動で `git push`（コミット済みの分のみ）される。
 
 `http://localhost:5000/` （同一LAN内のスマホからは `http://<PCのIPアドレス>:5000/`）でアクセスできます。
 
@@ -28,6 +32,7 @@ venv\Scripts\python run.py
 - ✅ 貯玉台帳（獲得・使用・換金・残高調整）と残高計算
 - ✅ 貯玉換金のFIFOロット会計・実現差額調整（設計書6.5）
 - ✅ 収支分析（月別・機種別・店舗別の簡易集計）
-- ⬜ 収支推移グラフ・貯玉推移グラフ（Chart.js未導入。次のステップ）
-- ⬜ 入力バリデーションの強化（貯玉残高不足チェックなど）
+- ✅ スマホでのカレンダー左右スワイプ月切り替え（/calendar/fragment API＋先読みキャッシュ）
+- ✅ 入力バリデーションの強化（貯玉残高が保存後にマイナスになる操作をブロックするなど）
+- ✅ 収支推移グラフ（月別＋累計）・貯玉残高推移グラフ（Chart.js、CDN経由）
 - ⬜ スクレイピング設定画面（プレースホルダのみ、未実装）
