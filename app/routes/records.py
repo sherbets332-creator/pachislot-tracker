@@ -1,35 +1,64 @@
 """記録入力／編集フォーム（5.2）と、日別の記録一覧。"""
+import sqlite3
+
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 
 from ..db import get_db
 from ..services import saved_ball_ledger
 from ..services.profit_calculator import calculate_lending_reference, calculate_profit
 from ..services.saved_ball_realization import recalculate_shop_ledger
+from ..services.validation import (
+    ValidationError,
+    check_balance_never_negative,
+    parse_int,
+    require_date,
+    to_half_width,
+)
 
 bp = Blueprint("records", __name__, url_prefix="/records")
 
 
 def _save_record(db, record_id: int | None, form) -> int:
-    shop_id = int(form["shop_id"])
-    machine_id = int(form["machine_id"])
-    play_date = form["play_date"]
-    cash_investment = int(form.get("cash_investment") or 0)
-    saved_ball_used = int(form.get("saved_ball_used") or 0)
-    payout_count = int(form.get("payout_count") or 0)
-    saved_ball_earned = int(form.get("saved_ball_earned") or 0)
+    play_date = require_date(form, "play_date", "日付")
+    shop_id = parse_int(form, "shop_id", "店舗", minimum=1)
+    machine_id = parse_int(form, "machine_id", "機種", minimum=1)
+    cash_investment = parse_int(form, "cash_investment", "現金投資", required=False, minimum=0)
+    saved_ball_used = parse_int(form, "saved_ball_used", "貯玉使用枚数", required=False, minimum=0)
+    payout_count = parse_int(form, "payout_count", "回収枚数", required=False, minimum=0)
+    saved_ball_earned = parse_int(form, "saved_ball_earned", "貯玉獲得数", required=False, minimum=0)
     memo = form.get("memo", "").strip() or None
     machine_number = form.get("machine_number", "").strip() or None
 
     if saved_ball_earned > payout_count:
-        raise ValueError("貯玉獲得数が回収枚数を超えています。")
+        raise ValidationError("貯玉獲得数が回収枚数を超えています。")
 
     shop = db.execute("SELECT * FROM shops WHERE id = ?", (shop_id,)).fetchone()
+    if shop is None:
+        raise ValidationError("選択した店舗が見つかりません。")
+    machine = db.execute("SELECT id FROM machines WHERE id = ?", (machine_id,)).fetchone()
+    if machine is None:
+        raise ValidationError("選択した機種が見つかりません。")
     exchange_rate_used = shop["exchange_rate"]
     lending_rate_used = shop["lending_rate"]
 
+    # この記録の use/earn を除いた台帳に、新しい値の use/earn を反映して
+    # 残高が一度でもマイナスにならないかを検証する。
+    # 編集で貯玉獲得数を減らしただけ（saved_ball_used自体は0）でも、それより後の
+    # 別記録の使用分が足りなくなることがあるため、used/earned どちらか一方だけでなく
+    # 常にチェックする（record_idがNoneの新規作成でも、他記録との整合性確認を兼ねる）。
+    proposed = []
+    if saved_ball_used > 0:
+        proposed.append((play_date, "use", saved_ball_used))
+    if saved_ball_earned > 0:
+        proposed.append((play_date, "earn", saved_ball_earned))
+    check_balance_never_negative(db, shop_id, proposed, exclude_record_id=record_id)
+
     manual_profit = form.get("manual_profit_amount")
     if manual_profit not in (None, ""):
-        profit_amount = int(manual_profit)
+        try:
+            profit_amount = int(to_half_width(manual_profit.strip()))
+        except ValueError:
+            raise ValidationError("手動入力の収支金額には整数を入力してください。") from None
         profit_is_manual = 1
     else:
         profit_amount = calculate_profit(cash_investment, saved_ball_used, payout_count, exchange_rate_used)
@@ -87,6 +116,9 @@ def new():
         except ValueError as e:
             flash(str(e))
             return redirect(url_for("records.new", date=request.form.get("play_date")))
+        except sqlite3.IntegrityError:
+            flash("入力内容がルールを満たしていないため保存できませんでした。数値を見直してください。")
+            return redirect(url_for("records.new", date=request.form.get("play_date")))
         flash("記録を保存しました。")
         return redirect(url_for("calendar.index"))
 
@@ -107,6 +139,9 @@ def edit(record_id: int):
             _save_record(db, record_id, request.form)
         except ValueError as e:
             flash(str(e))
+            return redirect(url_for("records.edit", record_id=record_id))
+        except sqlite3.IntegrityError:
+            flash("入力内容がルールを満たしていないため保存できませんでした。数値を見直してください。")
             return redirect(url_for("records.edit", record_id=record_id))
         flash("記録を更新しました。")
         return redirect(url_for("calendar.index"))
@@ -132,11 +167,25 @@ def edit(record_id: int):
 def delete(record_id: int):
     db = get_db()
     record = db.execute("SELECT shop_id FROM records WHERE id = ?", (record_id,)).fetchone()
+    if record is None:
+        flash("記録が見つかりませんでした。")
+        return redirect(url_for("calendar.index"))
+
+    try:
+        # この記録の use/earn を丸ごと取り除いた場合に、他の記録・換金・調整が
+        # 使っている分が足りなくなって残高がマイナスにならないかを確認する。
+        check_balance_never_negative(db, record["shop_id"], [], exclude_record_id=record_id)
+    except ValidationError:
+        flash(
+            "この記録が獲得した貯玉は、すでに他の記録の使用や換金で使われているため削除できません。"
+            "先にそちらの記録・換金・残高調整を編集または削除してください。"
+        )
+        return redirect(url_for("records.edit", record_id=record_id))
+
     saved_ball_ledger.delete_record_transactions(db, record_id)
     db.execute("DELETE FROM records WHERE id = ?", (record_id,))
     db.commit()
-    if record:
-        recalculate_shop_ledger(db, record["shop_id"])
+    recalculate_shop_ledger(db, record["shop_id"])
     flash("記録を削除しました。")
     return redirect(url_for("calendar.index"))
 
