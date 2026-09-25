@@ -28,6 +28,7 @@
             {% for s in shops %}
             <option value="{{ s['id'] }}"
                 data-exchange-rate="{{ s['exchange_rate'] }}"
+                data-balance="{{ balances[s['id']] if balances is defined else 0 }}"
                 {{ 'selected' if record and record['shop_id'] == s['id'] else '' }}>{{ s['name'] }}</option>
             {% endfor %}
         </select>
@@ -57,7 +58,10 @@
         </div>
     </div>
     <div class="mb-3">
-        <label class="form-label">貯玉使用枚数</label>
+        <div class="d-flex justify-content-between align-items-baseline">
+            <label class="form-label mb-0">貯玉使用枚数</label>
+            <span class="small text-muted" id="current-balance-hint"></span>
+        </div>
         <input type="number" name="saved_ball_used" id="saved_ball_used" class="form-control" min="0"
                value="{{ record['saved_ball_used'] if record else 0 }}">
     </div>
@@ -116,6 +120,7 @@
     const lendingRef = document.getElementById('lending-reference');
     const manualToggle = document.getElementById('manual-toggle');
     const manualInput = document.getElementById('manual_profit_amount');
+    const balanceHint = document.getElementById('current-balance-hint');
 
     function toHalfWidth(str) {
         return str.replace(/[０-９]/g, function (c) {
@@ -144,6 +149,13 @@
         return opt ? parseFloat(opt.dataset.exchangeRate || '0') : 0;
     }
 
+    function updateBalanceHint() {
+        const opt = shopSelect.options[shopSelect.selectedIndex];
+        if (!opt) { balanceHint.textContent = ''; return; }
+        const balance = parseInt(opt.dataset.balance || '0', 10);
+        balanceHint.textContent = '現在の貯玉残高：' + balance.toLocaleString() + '枚';
+    }
+
     function updatePreview() {
         const rate = currentRate();
         const cash = parseInt(cashInput.value || '0', 10);
@@ -169,6 +181,7 @@
         el.addEventListener('input', updatePreview);
         el.addEventListener('change', updatePreview);
     });
+    shopSelect.addEventListener('change', updateBalanceHint);
 
     manualToggle.addEventListener('change', function () {
         manualInput.style.display = manualToggle.checked ? 'block' : 'none';
@@ -177,6 +190,7 @@
     if (manualToggle.checked) manualInput.style.display = 'block';
 
     updatePreview();
+    updateBalanceHint();
 })();
 </script>
 {% endblock %}

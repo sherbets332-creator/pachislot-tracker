@@ -10,21 +10,23 @@
 <div class="list-group">
     {% for r in records %}
     {% set display_profit = r['profit_amount'] + r['realized_adjustment_total'] %}
-    <a href="{{ url_for('records.edit', record_id=r['id']) }}" class="list-group-item list-group-item-action">
-        <div class="d-flex justify-content-between">
-            <div>
-                <div class="fw-bold">{{ r['shop_name'] }} ／ {{ r['machine_name'] }}</div>
-                <small class="text-muted">
-                    投資{{ r['cash_investment'] }}円
-                    {% if r['saved_ball_used'] %} + 貯玉{{ r['saved_ball_used'] }}枚{% endif %}
-                    ／ 回収{{ r['payout_count'] }}枚
-                </small>
-            </div>
-            <div class="text-end {{ 'plus' if display_profit >= 0 else 'minus' }} fw-bold">
-                {{ display_profit }}円
-            </div>
+    <div class="list-group-item d-flex justify-content-between align-items-center">
+        <a href="{{ url_for('records.edit', record_id=r['id']) }}" class="text-decoration-none text-dark flex-grow-1">
+            <div class="fw-bold">{{ r['shop_name'] }} ／ {{ r['machine_name'] }}</div>
+            <small class="text-muted">
+                投資{{ r['cash_investment'] }}円
+                {% if r['saved_ball_used'] %} + 貯玉{{ r['saved_ball_used'] }}枚{% endif %}
+                ／ 回収{{ r['payout_count'] }}枚
+            </small>
+        </a>
+        <div class="text-end ms-3">
+            <div class="{{ 'plus' if display_profit >= 0 else 'minus' }} fw-bold">{{ display_profit }}円</div>
+            <form method="post" action="{{ url_for('records.delete', record_id=r['id']) }}"
+                  onsubmit="return confirm('この記録を削除しますか？');">
+                <button type="submit" class="btn btn-sm btn-outline-danger mt-1">削除</button>
+            </form>
         </div>
-    </a>
+    </div>
     {% endfor %}
 </div>
 {% else %}

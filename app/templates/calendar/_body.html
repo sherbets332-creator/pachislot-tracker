@@ -26,12 +26,17 @@
             <td class="bg-light"></td>
             {% else %}
             <td class="{{ 'border border-primary border-2' if day.is_today else '' }}" style="height: 64px; vertical-align: top;">
+                {% if day.total is none %}
+                {# この日はまだ記録が無いので、一覧画面を経由せず新規登録に直行する #}
+                <a href="{{ url_for('records.new', date=day.date_str) }}" class="text-decoration-none d-block h-100">
+                    <div class="small text-dark">{{ day.day }}</div>
+                </a>
+                {% else %}
                 <a href="{{ url_for('records.day', date=day.date_str) }}" class="text-decoration-none d-block h-100">
                     <div class="small text-dark">{{ day.day }}</div>
-                    {% if day.total is not none %}
                     <div class="small fw-bold {{ 'plus' if day.total >= 0 else 'minus' }}">{{ day.total }}</div>
-                    {% endif %}
                 </a>
+                {% endif %}
             </td>
             {% endif %}
             {% endfor %}

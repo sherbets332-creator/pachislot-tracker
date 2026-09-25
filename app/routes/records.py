@@ -124,10 +124,11 @@ def new():
 
     shops = db.execute("SELECT * FROM shops WHERE is_archived = 0 ORDER BY name").fetchall()
     machines = db.execute("SELECT * FROM machines WHERE is_archived = 0 ORDER BY name").fetchall()
+    balances = {s["id"]: saved_ball_ledger.get_balance(db, s["id"]) for s in shops}
     default_date = request.args.get("date", "")
     return render_template(
         "records/form.html", record=None, shops=shops, machines=machines,
-        default_date=default_date, active_nav="calendar",
+        balances=balances, default_date=default_date, active_nav="calendar",
     )
 
 
@@ -156,6 +157,7 @@ def edit(record_id: int):
         "SELECT * FROM machines WHERE is_archived = 0 OR id = ? ORDER BY name", (record["machine_id"],)
     ).fetchall()
 
+    balances = {s["id"]: saved_ball_ledger.get_balance(db, s["id"]) for s in shops}
     lending_reference = calculate_lending_reference(record["saved_ball_used"], record["lending_rate_used"])
     adjustments = db.execute(
         "SELECT * FROM record_realization_adjustments WHERE record_id = ? ORDER BY created_at DESC",
@@ -164,7 +166,7 @@ def edit(record_id: int):
 
     return render_template(
         "records/form.html", record=record, shops=shops, machines=machines,
-        default_date=record["play_date"], lending_reference=lending_reference,
+        balances=balances, default_date=record["play_date"], lending_reference=lending_reference,
         adjustments=adjustments, active_nav="calendar",
     )
 
