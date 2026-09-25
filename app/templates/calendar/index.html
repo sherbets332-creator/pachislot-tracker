@@ -1,43 +1,149 @@
 {% extends "base.html" %}
 {% block title %}カレンダー{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-2">
-    <a href="{{ url_for('calendar.index', year=prev_year, month=prev_month) }}" class="btn btn-sm btn-outline-secondary">◀</a>
-    <h1 class="h5 mb-0">{{ year }}年{{ month }}月</h1>
-    <a href="{{ url_for('calendar.index', year=next_year, month=next_month) }}" class="btn btn-sm btn-outline-secondary">▶</a>
+<div id="calendar-app" data-year="{{ year }}" data-month="{{ month }}">
+    <div id="calendar-viewport" style="overflow: hidden;">
+        <div id="calendar-body">
+            {% include "calendar/_body.html" %}
+        </div>
+    </div>
 </div>
-<div class="text-center mb-3">
-    <span class="text-muted small">当月収支</span>
-    <div class="fs-4 fw-bold {{ 'plus' if month_total >= 0 else 'minus' }}">{{ month_total }} 円</div>
-</div>
-
-<table class="table table-bordered text-center align-middle" style="table-layout: fixed;">
-    <thead>
-        <tr class="small">
-            <th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for week in weeks %}
-        <tr>
-            {% for day in week %}
-            {% if day is none %}
-            <td class="bg-light"></td>
-            {% else %}
-            <td class="{{ 'border border-primary border-2' if day.is_today else '' }}" style="height: 64px; vertical-align: top;">
-                <a href="{{ url_for('records.day', date=day.date_str) }}" class="text-decoration-none d-block h-100">
-                    <div class="small text-dark">{{ day.day }}</div>
-                    {% if day.total is not none %}
-                    <div class="small fw-bold {{ 'plus' if day.total >= 0 else 'minus' }}">{{ day.total }}</div>
-                    {% endif %}
-                </a>
-            </td>
-            {% endif %}
-            {% endfor %}
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
 
 <a href="{{ url_for('records.new', date=today) }}" class="btn btn-primary w-100 mt-2">+ 新規記録を登録</a>
+
+<script>
+(function () {
+    var app = document.getElementById('calendar-app');
+    var viewport = document.getElementById('calendar-viewport');
+    var bodyEl = document.getElementById('calendar-body');
+    var cache = new Map(); // "YYYY-MM" -> HTML文字列（一度見た月は再取得しない）
+    var isAnimating = false;
+
+    function monthKey(y, m) {
+        return y + '-' + String(m).padStart(2, '0');
+    }
+
+    function fetchMonth(y, m) {
+        var k = monthKey(y, m);
+        if (cache.has(k)) {
+            return Promise.resolve(cache.get(k));
+        }
+        return fetch('/calendar/fragment?year=' + y + '&month=' + m)
+            .then(function (res) { return res.text(); })
+            .then(function (html) {
+                cache.set(k, html);
+                return html;
+            });
+    }
+
+    function readNavTarget(html, dir) {
+        var tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        var btn = tmp.querySelector('[data-nav="' + dir + '"]');
+        return { year: parseInt(btn.dataset.year, 10), month: parseInt(btn.dataset.month, 10) };
+    }
+
+    function prefetchNeighbors(html) {
+        var prev = readNavTarget(html, 'prev');
+        var next = readNavTarget(html, 'next');
+        fetchMonth(prev.year, prev.month);
+        fetchMonth(next.year, next.month);
+    }
+
+    function bindNavButtons() {
+        var prevBtn = bodyEl.querySelector('[data-nav="prev"]');
+        var nextBtn = bodyEl.querySelector('[data-nav="next"]');
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                goTo(parseInt(prevBtn.dataset.year, 10), parseInt(prevBtn.dataset.month, 10), 'right');
+            });
+        }
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                goTo(parseInt(nextBtn.dataset.year, 10), parseInt(nextBtn.dataset.month, 10), 'left');
+            });
+        }
+    }
+
+    function goTo(y, m, direction) {
+        if (isAnimating) return;
+        isAnimating = true;
+        fetchMonth(y, m).then(function (html) {
+            var swap = function () {
+                bodyEl.innerHTML = html;
+                bindNavButtons();
+                prefetchNeighbors(html);
+                var url = new URL(window.location.href);
+                url.searchParams.set('year', y);
+                url.searchParams.set('month', m);
+                history.pushState({ year: y, month: m }, '', url.pathname + url.search);
+                app.dataset.year = y;
+                app.dataset.month = m;
+            };
+
+            if (!direction) {
+                swap();
+                isAnimating = false;
+                return;
+            }
+
+            var outX = direction === 'left' ? -24 : 24;
+            bodyEl.style.transition = 'transform 0.12s ease-in, opacity 0.12s ease-in';
+            bodyEl.style.transform = 'translateX(' + outX + 'px)';
+            bodyEl.style.opacity = '0';
+
+            setTimeout(function () {
+                swap();
+                bodyEl.style.transition = 'none';
+                bodyEl.style.transform = 'translateX(' + (-outX) + 'px)';
+                // 強制リフロー後にアニメーション開始（transition:noneが反映されるように）
+                void bodyEl.offsetWidth;
+                bodyEl.style.transition = 'transform 0.15s ease-out, opacity 0.15s ease-out';
+                bodyEl.style.transform = 'translateX(0)';
+                bodyEl.style.opacity = '1';
+                setTimeout(function () { isAnimating = false; }, 160);
+            }, 120);
+        });
+    }
+
+    // 初期表示分をキャッシュし、前後の月を先読みしておく
+    cache.set(monthKey(parseInt(app.dataset.year, 10), parseInt(app.dataset.month, 10)), bodyEl.innerHTML);
+    bindNavButtons();
+    prefetchNeighbors(bodyEl.innerHTML);
+
+    // スマホでの左右スワイプ検知
+    var touchStartX = null;
+    var touchStartY = null;
+    viewport.addEventListener('touchstart', function (e) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    viewport.addEventListener('touchend', function (e) {
+        if (touchStartX === null) return;
+        var dx = e.changedTouches[0].clientX - touchStartX;
+        var dy = e.changedTouches[0].clientY - touchStartY;
+        touchStartX = null;
+        touchStartY = null;
+        // 横方向に十分動いた場合のみスワイプとみなす（縦スクロールと区別）
+        if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+
+        var nextBtn = bodyEl.querySelector('[data-nav="next"]');
+        var prevBtn = bodyEl.querySelector('[data-nav="prev"]');
+        if (dx < 0 && nextBtn) {
+            goTo(parseInt(nextBtn.dataset.year, 10), parseInt(nextBtn.dataset.month, 10), 'left');
+        } else if (dx > 0 && prevBtn) {
+            goTo(parseInt(prevBtn.dataset.year, 10), parseInt(prevBtn.dataset.month, 10), 'right');
+        }
+    });
+
+    // ブラウザの戻る／進むボタン対応
+    window.addEventListener('popstate', function (e) {
+        if (e.state && e.state.year && e.state.month) {
+            goTo(e.state.year, e.state.month, null);
+        }
+    });
+})();
+</script>
 {% endblock %}

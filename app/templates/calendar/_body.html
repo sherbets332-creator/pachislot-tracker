@@ -1,0 +1,41 @@
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <a href="{{ url_for('calendar.index', year=prev_year, month=prev_month) }}"
+       class="btn btn-sm btn-outline-secondary"
+       data-nav="prev" data-year="{{ prev_year }}" data-month="{{ prev_month }}">◀</a>
+    <h1 class="h5 mb-0">{{ year }}年{{ month }}月</h1>
+    <a href="{{ url_for('calendar.index', year=next_year, month=next_month) }}"
+       class="btn btn-sm btn-outline-secondary"
+       data-nav="next" data-year="{{ next_year }}" data-month="{{ next_month }}">▶</a>
+</div>
+<div class="text-center mb-3">
+    <span class="text-muted small">当月収支</span>
+    <div class="fs-4 fw-bold {{ 'plus' if month_total >= 0 else 'minus' }}">{{ month_total }} 円</div>
+</div>
+
+<table class="table table-bordered text-center align-middle" style="table-layout: fixed;">
+    <thead>
+        <tr class="small">
+            <th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for week in weeks %}
+        <tr>
+            {% for day in week %}
+            {% if day is none %}
+            <td class="bg-light"></td>
+            {% else %}
+            <td class="{{ 'border border-primary border-2' if day.is_today else '' }}" style="height: 64px; vertical-align: top;">
+                <a href="{{ url_for('records.day', date=day.date_str) }}" class="text-decoration-none d-block h-100">
+                    <div class="small text-dark">{{ day.day }}</div>
+                    {% if day.total is not none %}
+                    <div class="small fw-bold {{ 'plus' if day.total >= 0 else 'minus' }}">{{ day.total }}</div>
+                    {% endif %}
+                </a>
+            </td>
+            {% endif %}
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
