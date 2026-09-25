@@ -19,12 +19,19 @@
                 ／ 回収{{ r['payout_count'] }}枚
             </small>
         </a>
-        <div class="text-end ms-3">
+        <div class="text-end ms-2">
             <div class="{{ 'plus' if display_profit >= 0 else 'minus' }} fw-bold">{{ display_profit }}円</div>
-            <form method="post" action="{{ url_for('records.delete', record_id=r['id']) }}"
-                  onsubmit="return confirm('この記録を削除しますか？');">
-                <button type="submit" class="btn btn-sm btn-outline-danger mt-1">削除</button>
-            </form>
+        </div>
+        <div class="ms-2 position-relative record-menu-wrap">
+            <button type="button" class="btn btn-sm btn-outline-secondary record-menu-toggle"
+                    data-target="record-menu-{{ r['id'] }}" aria-label="操作メニュー">⋮</button>
+            <div class="record-menu d-none position-absolute end-0 mt-1 p-2 bg-white border rounded shadow-sm"
+                 id="record-menu-{{ r['id'] }}" style="z-index: 10; min-width: 6rem;">
+                <form method="post" action="{{ url_for('records.delete', record_id=r['id']) }}"
+                      onsubmit="return confirm('この記録を削除しますか？');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger w-100">削除</button>
+                </form>
+            </div>
         </div>
     </div>
     {% endfor %}
@@ -34,4 +41,23 @@
 {% endif %}
 
 <a href="{{ url_for('calendar.index') }}" class="btn btn-outline-secondary mt-3">カレンダーに戻る</a>
+
+<script>
+(function () {
+    document.querySelectorAll('.record-menu-toggle').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var menu = document.getElementById(btn.dataset.target);
+            var wasOpen = !menu.classList.contains('d-none');
+            document.querySelectorAll('.record-menu').forEach(function (m) { m.classList.add('d-none'); });
+            if (!wasOpen) menu.classList.remove('d-none');
+        });
+    });
+    // メニュー外をタップしたら閉じる
+    document.addEventListener('click', function () {
+        document.querySelectorAll('.record-menu').forEach(function (m) { m.classList.add('d-none'); });
+    });
+})();
+</script>
 {% endblock %}
