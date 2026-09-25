@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}貯玉換金 - {{ shop['name'] }}{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">貯玉換金の記録（{{ shop['name'] }}）</h1>
+<form method="post">
+    <div class="mb-3">
+        <label class="form-label">日付</label>
+        <input type="date" name="transaction_date" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">換金枚数</label>
+        <input type="number" name="ball_count" class="form-control" required min="1">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">受取現金額（円）</label>
+        <input type="number" name="cash_amount" class="form-control" required min="0">
+        <div class="form-text">実際に受け取った金額をそのまま入力（計算はしない）。</div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">メモ</label>
+        <textarea name="memo" class="form-control" rows="2"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">記録する</button>
+    <a href="{{ url_for('shops.detail', shop_id=shop['id']) }}" class="btn btn-outline-secondary">戻る</a>
+</form>
+{% endblock %}

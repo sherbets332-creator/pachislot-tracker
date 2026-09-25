@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}機種{{ '編集' if machine else '新規登録' }}{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">機種{{ '編集' if machine else '新規登録' }}</h1>
+<form method="post">
+    <div class="mb-3">
+        <label class="form-label">機種名</label>
+        <input type="text" name="name" class="form-control" required value="{{ machine['name'] if machine else '' }}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">メーカー</label>
+        <input type="text" name="maker" class="form-control" value="{{ machine['maker'] if machine else '' }}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">メモ</label>
+        <textarea name="memo" class="form-control" rows="3">{{ machine['memo'] if machine else '' }}</textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">保存</button>
+    <a href="{{ url_for('machines.index') }}" class="btn btn-outline-secondary">戻る</a>
+</form>
+{% endblock %}

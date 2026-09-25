@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}パチスロ収支管理{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding-bottom: 72px; background: #f5f5f7; }
+        .plus { color: #0d6efd; }
+        .minus { color: #dc3545; }
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: #fff; border-top: 1px solid #ddd;
+            display: flex; z-index: 1000;
+        }
+        .bottom-nav a {
+            flex: 1; text-align: center; padding: 8px 0;
+            font-size: 0.75rem; color: #666; text-decoration: none;
+        }
+        .bottom-nav a.active { color: #0d6efd; font-weight: bold; }
+        main { max-width: 720px; margin: 0 auto; padding: 16px; }
+    </style>
+</head>
+<body>
+<main>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info py-2">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+</main>
+
+<nav class="bottom-nav">
+    <a href="{{ url_for('calendar.index') }}" class="{{ 'active' if active_nav == 'calendar' else '' }}">📅<br>カレンダー</a>
+    <a href="{{ url_for('reports.index') }}" class="{{ 'active' if active_nav == 'reports' else '' }}">📊<br>収支分析</a>
+    <a href="{{ url_for('shops.index') }}" class="{{ 'active' if active_nav == 'shops' else '' }}">🏪<br>店舗情報</a>
+    <a href="{{ url_for('machines.index') }}" class="{{ 'active' if active_nav == 'machines' else '' }}">🎰<br>機種情報</a>
+    <a href="#" class="{{ 'active' if active_nav == 'other' else '' }}">⚙️<br>その他</a>
+</nav>
+</body>
+</html>

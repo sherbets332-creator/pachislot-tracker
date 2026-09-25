@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}機種情報{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">機種情報</h1>
+    <a href="{{ url_for('machines.new') }}" class="btn btn-primary btn-sm">+ 新規登録</a>
+</div>
+
+{% if machines %}
+<div class="list-group">
+    {% for m in machines %}
+    <a href="{{ url_for('machines.edit', machine_id=m['id']) }}" class="list-group-item list-group-item-action">
+        <div class="fw-bold">{{ m['name'] }}</div>
+        {% if m['maker'] %}<small class="text-muted">{{ m['maker'] }}</small>{% endif %}
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<p class="text-muted">まだ機種が登録されていません。</p>
+{% endif %}
+{% endblock %}

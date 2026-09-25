@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}収支分析{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">収支分析</h1>
+
+<h2 class="h6">年別集計</h2>
+<div class="table-responsive mb-4">
+<table class="table table-sm">
+    <thead><tr><th>年</th><th>回数</th><th>収支</th></tr></thead>
+    <tbody>
+    {% for y in yearly %}
+        <tr>
+            <td>{{ y['y'] }}年</td>
+            <td>{{ y['play_count'] }}</td>
+            <td class="{{ 'plus' if y['total'] >= 0 else 'minus' }} fw-bold">{{ y['total'] }}円</td>
+        </tr>
+    {% else %}
+        <tr><td colspan="3" class="text-muted">記録がありません。</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<h2 class="h6">月別集計</h2>
+<div class="table-responsive mb-4">
+<table class="table table-sm">
+    <thead><tr><th>年月</th><th>回数</th><th>収支</th></tr></thead>
+    <tbody>
+    {% for m in monthly %}
+        <tr>
+            <td>{{ m['ym'] }}</td>
+            <td>{{ m['play_count'] }}</td>
+            <td class="{{ 'plus' if m['total'] >= 0 else 'minus' }} fw-bold">{{ m['total'] }}円</td>
+        </tr>
+    {% else %}
+        <tr><td colspan="3" class="text-muted">記録がありません。</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<h2 class="h6">機種別集計</h2>
+<div class="table-responsive mb-4">
+<table class="table table-sm">
+    <thead><tr><th>機種</th><th>回数</th><th>平均収支</th><th>合計収支</th></tr></thead>
+    <tbody>
+    {% for row in by_machine %}
+        <tr>
+            <td>{{ row['machine_name'] }}</td>
+            <td>{{ row['play_count'] }}</td>
+            <td>{{ row['avg_profit']|round|int }}円</td>
+            <td class="{{ 'plus' if row['total'] >= 0 else 'minus' }} fw-bold">{{ row['total'] }}円</td>
+        </tr>
+    {% else %}
+        <tr><td colspan="4" class="text-muted">記録がありません。</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<h2 class="h6">店舗別集計</h2>
+<div class="table-responsive mb-4">
+<table class="table table-sm">
+    <thead><tr><th>店舗</th><th>来店回数</th><th>合計収支</th><th>貯玉換金額（参考）</th></tr></thead>
+    <tbody>
+    {% for row in by_shop %}
+        <tr>
+            <td>{{ row['shop_name'] }}</td>
+            <td>{{ row['play_count'] }}</td>
+            <td class="{{ 'plus' if row['total'] >= 0 else 'minus' }} fw-bold">{{ row['total'] }}円</td>
+            <td class="text-muted">
+                {% for c in cashout_by_shop %}{% if c['shop_name'] == row['shop_name'] %}{{ c['total_cashout'] }}円{% endif %}{% endfor %}
+            </td>
+        </tr>
+    {% else %}
+        <tr><td colspan="4" class="text-muted">記録がありません。</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{% if other_adjustments %}
+<h2 class="h6">その他調整額（獲得元の記録がない貯玉の換金差額）</h2>
+<ul>
+    {% for o in other_adjustments %}
+    <li>{{ o['shop_name'] }}：{{ o['total'] }}円</li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

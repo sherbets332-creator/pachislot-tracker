@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}店舗情報{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">店舗情報</h1>
+    <a href="{{ url_for('shops.new') }}" class="btn btn-primary btn-sm">+ 新規登録</a>
+</div>
+
+{% if shops %}
+<div class="list-group">
+    {% for s in shops %}
+    <a href="{{ url_for('shops.detail', shop_id=s['id']) }}" class="list-group-item list-group-item-action">
+        <div class="d-flex justify-content-between">
+            <div>
+                <div class="fw-bold">{{ s['name'] }}</div>
+                <small class="text-muted">換金 {{ s['exchange_rate'] }}円/枚 ／ 貸出 {{ s['lending_rate'] }}円/枚</small>
+            </div>
+            <div class="text-end">
+                <div class="small text-muted">貯玉残高</div>
+                <div class="fw-bold">{{ balances[s['id']] }} 枚</div>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<p class="text-muted">まだ店舗が登録されていません。</p>
+{% endif %}
+{% endblock %}

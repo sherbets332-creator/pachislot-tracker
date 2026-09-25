@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ shop['name'] }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h1 class="h4 mb-0">{{ shop['name'] }}</h1>
+    <a href="{{ url_for('shops.edit', shop_id=shop['id']) }}" class="btn btn-sm btn-outline-secondary">編集</a>
+</div>
+<p class="text-muted mb-3">換金 {{ shop['exchange_rate'] }}円/枚 ／ 貸出（参考） {{ shop['lending_rate'] }}円/枚</p>
+
+<div class="card mb-3">
+    <div class="card-body d-flex justify-content-between align-items-center">
+        <div>
+            <div class="small text-muted">現在の貯玉残高</div>
+            <div class="fs-3 fw-bold">{{ balance }} 枚</div>
+        </div>
+        <div>
+            <a href="{{ url_for('shops.cashout', shop_id=shop['id']) }}" class="btn btn-outline-primary btn-sm">貯玉換金</a>
+            <a href="{{ url_for('shops.adjust', shop_id=shop['id']) }}" class="btn btn-outline-secondary btn-sm">残高調整</a>
+        </div>
+    </div>
+</div>
+
+<h2 class="h6">換金差額調整履歴</h2>
+{% if adjustments %}
+<div class="table-responsive mb-4">
+<table class="table table-sm">
+    <thead><tr><th>台の記録</th><th>消費枚数</th><th>計算価値</th><th>調整額</th></tr></thead>
+    <tbody>
+    {% for a in adjustments %}
+        <tr>
+            <td>{% if a['record_id'] %}{{ a['record_play_date'] }} {{ a['machine_name'] }}{% else %}(その他調整){% endif %}</td>
+            <td>{{ a['consumed_ball_count'] }}枚</td>
+            <td>{{ a['calculated_value'] }}円</td>
+            <td class="{{ 'plus' if a['adjustment_amount'] > 0 else ('minus' if a['adjustment_amount'] < 0 else '') }}">
+                {{ a['adjustment_amount'] }}円
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<p class="text-muted small">まだ実現差額調整はありません。</p>
+{% endif %}
+
+<h2 class="h6">貯玉増減履歴</h2>
+<div class="table-responsive">
+<table class="table table-sm">
+    <thead><tr><th>日付</th><th>種別</th><th>枚数</th><th>備考</th></tr></thead>
+    <tbody>
+    {% for t in ledger %}
+        <tr>
+            <td>{{ t['transaction_date'] }}</td>
+            <td>{{ {'earn':'獲得','use':'使用','cashout':'換金','adjust':'調整'}[t['transaction_type']] }}</td>
+            <td>{{ t['ball_count'] }}</td>
+            <td class="small text-muted">
+                {% if t['machine_name'] %}{{ t['machine_name'] }}{% endif %}
+                {% if t['cash_amount'] %}／受取{{ t['cash_amount'] }}円{% endif %}
+                {% if t['memo'] %}／{{ t['memo'] }}{% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

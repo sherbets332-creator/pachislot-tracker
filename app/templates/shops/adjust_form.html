@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}残高調整 - {{ shop['name'] }}{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">貯玉残高調整（{{ shop['name'] }}）</h1>
+<form method="post">
+    <div class="mb-3">
+        <label class="form-label">日付</label>
+        <input type="date" name="transaction_date" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">調整枚数（＋は増加、−は減少）</label>
+        <input type="number" name="ball_count" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">理由メモ（任意）</label>
+        <textarea name="memo" class="form-control" rows="2" placeholder="例：実際の残高と合わせた"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">記録する</button>
+    <a href="{{ url_for('shops.detail', shop_id=shop['id']) }}" class="btn btn-outline-secondary">戻る</a>
+</form>
+{% endblock %}

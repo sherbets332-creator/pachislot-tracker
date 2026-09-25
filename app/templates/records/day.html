@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ date }} の記録{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">{{ date }} の記録</h1>
+    <a href="{{ url_for('records.new', date=date) }}" class="btn btn-primary btn-sm">+ 新規登録</a>
+</div>
+
+{% if records %}
+<div class="list-group">
+    {% for r in records %}
+    {% set display_profit = r['profit_amount'] + r['realized_adjustment_total'] %}
+    <a href="{{ url_for('records.edit', record_id=r['id']) }}" class="list-group-item list-group-item-action">
+        <div class="d-flex justify-content-between">
+            <div>
+                <div class="fw-bold">{{ r['shop_name'] }} ／ {{ r['machine_name'] }}</div>
+                <small class="text-muted">
+                    投資{{ r['cash_investment'] }}円
+                    {% if r['saved_ball_used'] %} + 貯玉{{ r['saved_ball_used'] }}枚{% endif %}
+                    ／ 回収{{ r['payout_count'] }}枚
+                </small>
+            </div>
+            <div class="text-end {{ 'plus' if display_profit >= 0 else 'minus' }} fw-bold">
+                {{ display_profit }}円
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<p class="text-muted">この日の記録はまだありません。</p>
+{% endif %}
+
+<a href="{{ url_for('calendar.index') }}" class="btn btn-outline-secondary mt-3">カレンダーに戻る</a>
+{% endblock %}

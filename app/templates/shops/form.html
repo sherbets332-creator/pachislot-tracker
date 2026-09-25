@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}店舗{{ '編集' if shop else '新規登録' }}{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">店舗{{ '編集' if shop else '新規登録' }}</h1>
+<form method="post">
+    <div class="mb-3">
+        <label class="form-label">店舗名</label>
+        <input type="text" name="name" class="form-control" required value="{{ shop['name'] if shop else '' }}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">換金レート（円／枚）</label>
+        <input type="number" step="0.01" name="exchange_rate" id="exchange_rate" class="form-control" required
+               value="{{ shop['exchange_rate'] if shop else '20.0' }}">
+        <div class="input-group input-group-sm mt-1">
+            <span class="input-group-text">1000円で</span>
+            <input type="number" step="0.01" id="exchange_rate_count" class="form-control" placeholder="枚数">
+            <span class="input-group-text">枚</span>
+            <button type="button" class="btn btn-outline-secondary" data-target="exchange_rate" data-count="exchange_rate_count">反映</button>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">貸し出しレート（円／枚・参考指標）</label>
+        <input type="number" step="0.01" name="lending_rate" id="lending_rate" class="form-control" required
+               value="{{ shop['lending_rate'] if shop else '20.0' }}">
+        <div class="input-group input-group-sm mt-1">
+            <span class="input-group-text">1000円で</span>
+            <input type="number" step="0.01" id="lending_rate_count" class="form-control" placeholder="枚数">
+            <span class="input-group-text">枚</span>
+            <button type="button" class="btn btn-outline-secondary" data-target="lending_rate" data-count="lending_rate_count">反映</button>
+        </div>
+        <div class="form-text">等価店は換金レートと同じ値でよい。収支計算には使わず参考表示のみに使う。</div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="small fw-bold mb-2">よくあるレート早見表（1000円あたりの枚数 → 円/枚）</div>
+            <table class="table table-sm table-hover mb-0" id="rate-reference-table">
+                <thead><tr><th>1000円で</th><th>円／枚</th></tr></thead>
+                <tbody>
+                    <tr data-rate="21.74" style="cursor: pointer;"><td>46枚</td><td>21.74円</td></tr>
+                    <tr data-rate="21.28" style="cursor: pointer;"><td>47枚</td><td>21.28円</td></tr>
+                    <tr data-rate="20.83" style="cursor: pointer;"><td>48枚</td><td>20.83円</td></tr>
+                    <tr data-rate="20.00" style="cursor: pointer;"><td>50枚（等価）</td><td>20.00円</td></tr>
+                    <tr data-rate="19.41" style="cursor: pointer;"><td>51.52枚</td><td>19.41円</td></tr>
+                    <tr data-rate="19.05" style="cursor: pointer;"><td>52.5枚</td><td>19.05円</td></tr>
+                    <tr data-rate="18.18" style="cursor: pointer;"><td>55枚</td><td>18.18円</td></tr>
+                    <tr data-rate="17.54" style="cursor: pointer;"><td>57枚</td><td>17.54円</td></tr>
+                </tbody>
+            </table>
+            <div class="form-text mt-1">行をタップすると、直前にカーソルがあったレート欄に自動で入力されます。</div>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">住所</label>
+        <input type="text" name="address" class="form-control" value="{{ shop['address'] if shop else '' }}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">メモ</label>
+        <textarea name="memo" class="form-control" rows="3">{{ shop['memo'] if shop else '' }}</textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">保存</button>
+    <a href="{{ url_for('shops.index') }}" class="btn btn-outline-secondary">戻る</a>
+</form>
+
+<script>
+document.querySelectorAll('[data-target][data-count]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        var countInput = document.getElementById(btn.dataset.count);
+        var targetInput = document.getElementById(btn.dataset.target);
+        var count = parseFloat(countInput.value);
+        if (!count || count <= 0) return;
+        targetInput.value = Math.round((1000 / count) * 100) / 100;
+    });
+});
+
+// 早見表の行クリックで、直前にカーソルがあったレート欄に反映する
+(function () {
+    var exchangeInput = document.getElementById('exchange_rate');
+    var lendingInput = document.getElementById('lending_rate');
+    var lastFocused = exchangeInput; // デフォルトは換金レート欄
+
+    [exchangeInput, lendingInput].forEach(function (input) {
+        input.addEventListener('focus', function () { lastFocused = input; });
+    });
+
+    document.querySelectorAll('#rate-reference-table tbody tr').forEach(function (row) {
+        row.addEventListener('click', function () {
+            lastFocused.value = row.dataset.rate;
+            lastFocused.focus();
+        });
+    });
+})();
+</script>
+{% endblock %}
