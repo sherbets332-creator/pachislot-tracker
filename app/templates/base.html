@@ -12,7 +12,10 @@
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0;
             background: #fff; border-top: 1px solid #ddd;
-            display: flex; z-index: 1000;
+            z-index: 1000;
+        }
+        .bottom-nav-inner {
+            display: flex; max-width: 720px; margin: 0 auto;
         }
         .bottom-nav a {
             flex: 1; text-align: center; padding: 8px 0;
@@ -35,11 +38,13 @@
 </main>
 
 <nav class="bottom-nav">
-    <a href="{{ url_for('calendar.index') }}" class="{{ 'active' if active_nav == 'calendar' else '' }}">📅<br>カレンダー</a>
-    <a href="{{ url_for('reports.index') }}" class="{{ 'active' if active_nav == 'reports' else '' }}">📊<br>収支分析</a>
-    <a href="{{ url_for('shops.index') }}" class="{{ 'active' if active_nav == 'shops' else '' }}">🏪<br>店舗情報</a>
-    <a href="{{ url_for('machines.index') }}" class="{{ 'active' if active_nav == 'machines' else '' }}">🎰<br>機種情報</a>
-    <a href="#" class="{{ 'active' if active_nav == 'other' else '' }}">⚙️<br>その他</a>
+    <div class="bottom-nav-inner">
+        <a href="{{ url_for('calendar.index') }}" class="{{ 'active' if active_nav == 'calendar' else '' }}">📅<br>カレンダー</a>
+        <a href="{{ url_for('reports.index') }}" class="{{ 'active' if active_nav == 'reports' else '' }}">📊<br>収支分析</a>
+        <a href="{{ url_for('shops.index') }}" class="{{ 'active' if active_nav == 'shops' else '' }}">🏪<br>店舗情報</a>
+        <a href="{{ url_for('machines.index') }}" class="{{ 'active' if active_nav == 'machines' else '' }}">🎰<br>機種情報</a>
+        <a href="#" class="{{ 'active' if active_nav == 'other' else '' }}">⚙️<br>その他</a>
+    </div>
 </nav>
 </body>
 </html>
