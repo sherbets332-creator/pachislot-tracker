@@ -11,7 +11,7 @@
     <div class="card-body d-flex justify-content-between align-items-center">
         <div>
             <div class="small text-muted">現在の貯玉残高</div>
-            <div class="fs-3 fw-bold">{{ balance }} 枚</div>
+            <div class="fs-3 fw-bold">{{ balance|commas }} 枚</div>
         </div>
         <div>
             <a href="{{ url_for('shops.cashout', shop_id=shop['id']) }}" class="btn btn-outline-primary btn-sm">貯玉換金</a>
@@ -40,10 +40,10 @@
     {% for a in adjustments %}
         <tr>
             <td>{% if a['record_id'] %}{{ a['record_play_date'] }} {{ a['machine_name'] }}{% else %}(その他調整){% endif %}</td>
-            <td>{{ a['consumed_ball_count'] }}枚</td>
-            <td>{{ a['calculated_value'] }}円</td>
+            <td>{{ a['consumed_ball_count']|commas }}枚</td>
+            <td>{{ a['calculated_value']|commas }}円</td>
             <td class="{{ 'plus' if a['adjustment_amount'] > 0 else ('minus' if a['adjustment_amount'] < 0 else '') }}">
-                {{ a['adjustment_amount'] }}円
+                {{ a['adjustment_amount']|commas }}円
             </td>
         </tr>
     {% endfor %}
@@ -63,10 +63,10 @@
         <tr>
             <td>{{ t['transaction_date'] }}</td>
             <td>{{ {'earn':'獲得','use':'使用','cashout':'換金','adjust':'調整'}[t['transaction_type']] }}</td>
-            <td>{{ t['ball_count'] }}</td>
+            <td>{{ t['ball_count']|commas }}</td>
             <td class="small text-muted">
                 {% if t['machine_name'] %}{{ t['machine_name'] }}{% endif %}
-                {% if t['cash_amount'] %}／受取{{ t['cash_amount'] }}円{% endif %}
+                {% if t['cash_amount'] %}／受取{{ t['cash_amount']|commas }}円{% endif %}
                 {% if t['memo'] %}／{{ t['memo'] }}{% endif %}
             </td>
             <td class="small">

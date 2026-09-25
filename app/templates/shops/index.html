@@ -19,7 +19,7 @@
             </a>
             <div class="text-end">
                 <div class="small text-muted">貯玉残高</div>
-                <div class="fw-bold">{{ balances[s['id']] }} 枚</div>
+                <div class="fw-bold">{{ balances[s['id']]|commas }} 枚</div>
             </div>
         </div>
         {% if show_archived %}

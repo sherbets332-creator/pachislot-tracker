@@ -23,7 +23,7 @@
         <tr>
             <td>{{ y['y'] }}年</td>
             <td>{{ y['play_count'] }}</td>
-            <td class="{{ 'plus' if y['total'] >= 0 else 'minus' }} fw-bold">{{ y['total'] }}円</td>
+            <td class="{{ 'plus' if y['total'] >= 0 else 'minus' }} fw-bold">{{ y['total']|commas }}円</td>
         </tr>
     {% else %}
         <tr><td colspan="3" class="text-muted">記録がありません。</td></tr>
@@ -41,7 +41,7 @@
         <tr>
             <td>{{ m['ym'] }}</td>
             <td>{{ m['play_count'] }}</td>
-            <td class="{{ 'plus' if m['total'] >= 0 else 'minus' }} fw-bold">{{ m['total'] }}円</td>
+            <td class="{{ 'plus' if m['total'] >= 0 else 'minus' }} fw-bold">{{ m['total']|commas }}円</td>
         </tr>
     {% else %}
         <tr><td colspan="3" class="text-muted">記録がありません。</td></tr>
@@ -59,8 +59,8 @@
         <tr>
             <td>{{ row['machine_name'] }}</td>
             <td>{{ row['play_count'] }}</td>
-            <td>{{ row['avg_profit']|round|int }}円</td>
-            <td class="{{ 'plus' if row['total'] >= 0 else 'minus' }} fw-bold">{{ row['total'] }}円</td>
+            <td>{{ row['avg_profit']|commas }}円</td>
+            <td class="{{ 'plus' if row['total'] >= 0 else 'minus' }} fw-bold">{{ row['total']|commas }}円</td>
         </tr>
     {% else %}
         <tr><td colspan="4" class="text-muted">記録がありません。</td></tr>
@@ -78,9 +78,9 @@
         <tr>
             <td>{{ row['shop_name'] }}</td>
             <td>{{ row['play_count'] }}</td>
-            <td class="{{ 'plus' if row['total'] >= 0 else 'minus' }} fw-bold">{{ row['total'] }}円</td>
+            <td class="{{ 'plus' if row['total'] >= 0 else 'minus' }} fw-bold">{{ row['total']|commas }}円</td>
             <td class="text-muted">
-                {% for c in cashout_by_shop %}{% if c['shop_name'] == row['shop_name'] %}{{ c['total_cashout'] }}円{% endif %}{% endfor %}
+                {% for c in cashout_by_shop %}{% if c['shop_name'] == row['shop_name'] %}{{ c['total_cashout']|commas }}円{% endif %}{% endfor %}
             </td>
         </tr>
     {% else %}
@@ -94,7 +94,7 @@
 <h2 class="h6">その他調整額（獲得元の記録がない貯玉の換金差額）</h2>
 <ul>
     {% for o in other_adjustments %}
-    <li>{{ o['shop_name'] }}：{{ o['total'] }}円</li>
+    <li>{{ o['shop_name'] }}：{{ o['total']|commas }}円</li>
     {% endfor %}
 </ul>
 {% endif %}

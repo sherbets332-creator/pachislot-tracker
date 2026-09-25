@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block title %}カレンダー{% endblock %}
 {% block content %}
+<style>
+    /* スマホの狭い列でも金額（桁区切り込み）がはみ出ないようにする */
+    #calendar-body table td { padding: 0.25rem 0.1rem; }
+    .day-amount { font-size: 0.62rem; line-height: 1.05; word-break: break-all; }
+</style>
 <div id="calendar-app" data-year="{{ year }}" data-month="{{ month }}">
     <div id="calendar-viewport" style="overflow: hidden;">
         <div id="calendar-body">

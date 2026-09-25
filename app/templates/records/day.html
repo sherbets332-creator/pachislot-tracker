@@ -14,13 +14,13 @@
         <a href="{{ url_for('records.edit', record_id=r['id']) }}" class="text-decoration-none text-dark flex-grow-1">
             <div class="fw-bold">{{ r['shop_name'] }} ／ {{ r['machine_name'] }}</div>
             <small class="text-muted">
-                投資{{ r['cash_investment'] }}円
-                {% if r['saved_ball_used'] %} + 貯玉{{ r['saved_ball_used'] }}枚{% endif %}
-                ／ 回収{{ r['payout_count'] }}枚
+                投資{{ r['cash_investment']|commas }}円
+                {% if r['saved_ball_used'] %} + 貯玉{{ r['saved_ball_used']|commas }}枚{% endif %}
+                ／ 回収{{ r['payout_count']|commas }}枚
             </small>
         </a>
         <div class="text-end ms-2">
-            <div class="{{ 'plus' if display_profit >= 0 else 'minus' }} fw-bold">{{ display_profit }}円</div>
+            <div class="{{ 'plus' if display_profit >= 0 else 'minus' }} fw-bold">{{ display_profit|commas }}円</div>
         </div>
         <div class="ms-2 position-relative record-menu-wrap">
             <button type="button" class="btn btn-sm btn-outline-secondary record-menu-toggle"

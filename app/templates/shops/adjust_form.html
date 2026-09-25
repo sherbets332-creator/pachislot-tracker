@@ -2,7 +2,7 @@
 {% block title %}残高調整{{ '編集' if transaction else '' }} - {{ shop['name'] }}{% endblock %}
 {% block content %}
 <h1 class="h4 mb-3">貯玉残高調整{{ '編集' if transaction else '' }}（{{ shop['name'] }}）</h1>
-<p class="text-muted small">現在の貯玉残高：{{ balance }}枚</p>
+<p class="text-muted small">現在の貯玉残高：{{ balance|commas }}枚</p>
 <form method="post"
       action="{{ url_for('shops.edit_transaction', shop_id=shop['id'], tx_id=transaction['id']) if transaction else url_for('shops.adjust', shop_id=shop['id']) }}">
     <div class="mb-3">

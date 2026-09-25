@@ -20,6 +20,16 @@ def create_app(test_config: dict | None = None) -> Flask:
     if test_config is not None:
         app.config.update(test_config)
 
+    @app.template_filter("commas")
+    def commas_filter(value):
+        """金額・枚数を3桁区切りで表示する（例: -49857 -> "-49,857"）。"""
+        if value is None or value == "":
+            return ""
+        try:
+            return f"{round(float(value)):,}"
+        except (TypeError, ValueError):
+            return value
+
     db_module.init_app(app)
 
     with app.app_context():

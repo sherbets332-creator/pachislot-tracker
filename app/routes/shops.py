@@ -107,6 +107,9 @@ def new():
 def edit(shop_id: int):
     db = get_db()
     shop = db.execute("SELECT * FROM shops WHERE id = ?", (shop_id,)).fetchone()
+    if shop is None:
+        flash("店舗が見つかりませんでした（削除済みの可能性があります）。")
+        return redirect(url_for("shops.index"))
     if request.method == "POST":
         try:
             _save_shop(db, shop_id, request.form)
@@ -159,6 +162,9 @@ def delete_shop(shop_id: int):
 def detail(shop_id: int):
     db = get_db()
     shop = db.execute("SELECT * FROM shops WHERE id = ?", (shop_id,)).fetchone()
+    if shop is None:
+        flash("店舗が見つかりませんでした（削除済みの可能性があります）。")
+        return redirect(url_for("shops.index"))
     balance = saved_ball_ledger.get_balance(db, shop_id)
     ledger = saved_ball_ledger.get_ledger(db, shop_id)
     balance_history = saved_ball_ledger.get_balance_history(db, shop_id)
@@ -191,6 +197,9 @@ def detail(shop_id: int):
 def cashout(shop_id: int):
     db = get_db()
     shop = db.execute("SELECT * FROM shops WHERE id = ?", (shop_id,)).fetchone()
+    if shop is None:
+        flash("店舗が見つかりませんでした（削除済みの可能性があります）。")
+        return redirect(url_for("shops.index"))
     if request.method == "POST":
         try:
             transaction_date = require_date(request.form, "transaction_date", "日付")
@@ -232,6 +241,9 @@ def cashout(shop_id: int):
 def adjust(shop_id: int):
     db = get_db()
     shop = db.execute("SELECT * FROM shops WHERE id = ?", (shop_id,)).fetchone()
+    if shop is None:
+        flash("店舗が見つかりませんでした（削除済みの可能性があります）。")
+        return redirect(url_for("shops.index"))
     if request.method == "POST":
         try:
             transaction_date = require_date(request.form, "transaction_date", "日付")

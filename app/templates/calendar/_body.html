@@ -9,7 +9,7 @@
 </div>
 <div class="text-center mb-3">
     <span class="text-muted small">当月収支</span>
-    <div class="fs-4 fw-bold {{ 'plus' if month_total >= 0 else 'minus' }}">{{ month_total }} 円</div>
+    <div class="fs-4 fw-bold {{ 'plus' if month_total >= 0 else 'minus' }}">{{ month_total|commas }} 円</div>
 </div>
 
 <table class="table table-bordered text-center align-middle" style="table-layout: fixed;">
@@ -34,7 +34,7 @@
                 {% else %}
                 <a href="{{ url_for('records.day', date=day.date_str) }}" class="text-decoration-none d-block h-100">
                     <div class="small text-dark">{{ day.day }}</div>
-                    <div class="small fw-bold {{ 'plus' if day.total >= 0 else 'minus' }}">{{ day.total }}</div>
+                    <div class="day-amount fw-bold {{ 'plus' if day.total >= 0 else 'minus' }}">{{ day.total|commas }}</div>
                 </a>
                 {% endif %}
             </td>

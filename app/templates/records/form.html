@@ -5,11 +5,11 @@
 
 {% if record and record['realized_adjustment_total'] %}
 <div class="alert alert-{{ 'primary' if record['realized_adjustment_total'] > 0 else 'warning' }} py-2">
-    実現差額調整：{{ record['realized_adjustment_total'] }}円（この記録が獲得した貯玉の、後日の換金結果による補正）
+    実現差額調整：{{ record['realized_adjustment_total']|commas }}円（この記録が獲得した貯玉の、後日の換金結果による補正）
     {% if adjustments %}
     <ul class="mb-0 small mt-1">
         {% for a in adjustments %}
-        <li>{{ a['consumed_ball_count'] }}枚消費 → 調整額 {{ a['adjustment_amount'] }}円</li>
+        <li>{{ a['consumed_ball_count']|commas }}枚消費 → 調整額 {{ a['adjustment_amount']|commas }}円</li>
         {% endfor %}
     </ul>
     {% endif %}
