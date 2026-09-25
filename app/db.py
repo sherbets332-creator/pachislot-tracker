@@ -39,6 +39,34 @@ def init_db() -> None:
     db.commit()
 
 
+# schema.sql に列を追加したとき、既存のDBファイルには自動では反映されない
+# （CREATE TABLE IF NOT EXISTS は既存テーブルをスキップするため）。
+# マイグレーションツールを入れるほどの規模ではないので、ここに
+# (テーブル名, 列名, 追加用DDL) を足していく簡易な自己修復方式にする。
+_COLUMN_MIGRATIONS = [
+    ("shops", "is_archived", "ALTER TABLE shops ADD COLUMN is_archived INTEGER NOT NULL DEFAULT 0"),
+    ("machines", "is_archived", "ALTER TABLE machines ADD COLUMN is_archived INTEGER NOT NULL DEFAULT 0"),
+]
+
+
+def ensure_schema_migrations() -> None:
+    """起動時に呼び、既存DBに不足している列があれば追加する（テーブルがまだ無ければ何もしない）。"""
+    db = get_db()
+    existing_tables = {
+        row["name"] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+    }
+    changed = False
+    for table, column, ddl in _COLUMN_MIGRATIONS:
+        if table not in existing_tables:
+            continue
+        columns = {row["name"] for row in db.execute(f"PRAGMA table_info({table})").fetchall()}
+        if column not in columns:
+            db.execute(ddl)
+            changed = True
+    if changed:
+        db.commit()
+
+
 @click.command("init-db")
 def init_db_command() -> None:
     """`flask init-db` — DBファイルをschema.sqlから初期化する。"""

@@ -30,11 +30,25 @@ def _save_machine(db, machine_id: int | None, form) -> None:
         raise ValidationError("その機種名はすでに登録されています。") from None
 
 
+def _machine_has_history(db, machine_id: int) -> bool:
+    row = db.execute("SELECT 1 FROM records WHERE machine_id = ?", (machine_id,)).fetchone()
+    return row is not None
+
+
 @bp.route("/")
 def index():
     db = get_db()
-    machines = db.execute("SELECT * FROM machines ORDER BY name").fetchall()
-    return render_template("machines/index.html", machines=machines, active_nav="machines")
+    show_archived = request.args.get("show_archived") == "1"
+    machines = db.execute(
+        "SELECT * FROM machines WHERE is_archived = ? ORDER BY name",
+        (1 if show_archived else 0,),
+    ).fetchall()
+    archived_count = db.execute("SELECT COUNT(*) AS c FROM machines WHERE is_archived = 1").fetchone()["c"]
+    return render_template(
+        "machines/index.html", machines=machines,
+        show_archived=show_archived, archived_count=archived_count,
+        active_nav="machines",
+    )
 
 
 @bp.route("/new", methods=["GET", "POST"])
@@ -63,4 +77,41 @@ def edit(machine_id: int):
             return redirect(url_for("machines.edit", machine_id=machine_id))
         flash("機種を更新しました。")
         return redirect(url_for("machines.index"))
-    return render_template("machines/form.html", machine=machine, active_nav="machines")
+    has_history = _machine_has_history(db, machine_id)
+    return render_template("machines/form.html", machine=machine, has_history=has_history, active_nav="machines")
+
+
+@bp.route("/<int:machine_id>/archive", methods=["POST"])
+def archive(machine_id: int):
+    db = get_db()
+    db.execute(
+        "UPDATE machines SET is_archived = 1, updated_at = datetime('now','localtime') WHERE id = ?",
+        (machine_id,),
+    )
+    db.commit()
+    flash("機種をアーカイブしました。一覧や記録入力の選択肢には出なくなりますが、記録は残ります。")
+    return redirect(url_for("machines.index"))
+
+
+@bp.route("/<int:machine_id>/unarchive", methods=["POST"])
+def unarchive(machine_id: int):
+    db = get_db()
+    db.execute(
+        "UPDATE machines SET is_archived = 0, updated_at = datetime('now','localtime') WHERE id = ?",
+        (machine_id,),
+    )
+    db.commit()
+    flash("機種を一覧に戻しました。")
+    return redirect(url_for("machines.index", show_archived=1))
+
+
+@bp.route("/<int:machine_id>/delete", methods=["POST"])
+def delete_machine(machine_id: int):
+    db = get_db()
+    if _machine_has_history(db, machine_id):
+        flash("この機種には記録があるため削除できません。アーカイブを使ってください。")
+        return redirect(url_for("machines.edit", machine_id=machine_id))
+    db.execute("DELETE FROM machines WHERE id = ?", (machine_id,))
+    db.commit()
+    flash("機種を削除しました。")
+    return redirect(url_for("machines.index"))

@@ -60,12 +60,33 @@ def _save_shop(db, shop_id: int | None, form) -> None:
         raise ValidationError("その店舗名はすでに登録されています。") from None
 
 
+def _shop_has_history(db, shop_id: int) -> bool:
+    row = db.execute(
+        """
+        SELECT 1 FROM records WHERE shop_id = ?
+        UNION
+        SELECT 1 FROM saved_ball_transactions WHERE shop_id = ?
+        """,
+        (shop_id, shop_id),
+    ).fetchone()
+    return row is not None
+
+
 @bp.route("/")
 def index():
     db = get_db()
-    shops = db.execute("SELECT * FROM shops ORDER BY name").fetchall()
+    show_archived = request.args.get("show_archived") == "1"
+    shops = db.execute(
+        "SELECT * FROM shops WHERE is_archived = ? ORDER BY name",
+        (1 if show_archived else 0,),
+    ).fetchall()
     balances = {s["id"]: saved_ball_ledger.get_balance(db, s["id"]) for s in shops}
-    return render_template("shops/index.html", shops=shops, balances=balances, active_nav="shops")
+    archived_count = db.execute("SELECT COUNT(*) AS c FROM shops WHERE is_archived = 1").fetchone()["c"]
+    return render_template(
+        "shops/index.html", shops=shops, balances=balances,
+        show_archived=show_archived, archived_count=archived_count,
+        active_nav="shops",
+    )
 
 
 @bp.route("/new", methods=["GET", "POST"])
@@ -94,7 +115,44 @@ def edit(shop_id: int):
             return redirect(url_for("shops.edit", shop_id=shop_id))
         flash("店舗情報を更新しました。")
         return redirect(url_for("shops.index"))
-    return render_template("shops/form.html", shop=shop, active_nav="shops")
+    has_history = _shop_has_history(db, shop_id)
+    return render_template("shops/form.html", shop=shop, has_history=has_history, active_nav="shops")
+
+
+@bp.route("/<int:shop_id>/archive", methods=["POST"])
+def archive(shop_id: int):
+    db = get_db()
+    db.execute(
+        "UPDATE shops SET is_archived = 1, updated_at = datetime('now','localtime') WHERE id = ?",
+        (shop_id,),
+    )
+    db.commit()
+    flash("店舗をアーカイブしました。一覧や記録入力の選択肢には出なくなりますが、記録・貯玉履歴はそのまま残ります。")
+    return redirect(url_for("shops.index"))
+
+
+@bp.route("/<int:shop_id>/unarchive", methods=["POST"])
+def unarchive(shop_id: int):
+    db = get_db()
+    db.execute(
+        "UPDATE shops SET is_archived = 0, updated_at = datetime('now','localtime') WHERE id = ?",
+        (shop_id,),
+    )
+    db.commit()
+    flash("店舗を一覧に戻しました。")
+    return redirect(url_for("shops.index", show_archived=1))
+
+
+@bp.route("/<int:shop_id>/delete", methods=["POST"])
+def delete_shop(shop_id: int):
+    db = get_db()
+    if _shop_has_history(db, shop_id):
+        flash("この店舗には記録・貯玉履歴があるため削除できません。アーカイブを使ってください。")
+        return redirect(url_for("shops.edit", shop_id=shop_id))
+    db.execute("DELETE FROM shops WHERE id = ?", (shop_id,))
+    db.commit()
+    flash("店舗を削除しました。")
+    return redirect(url_for("shops.index"))
 
 
 @bp.route("/<int:shop_id>")

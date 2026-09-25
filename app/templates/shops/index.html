@@ -2,28 +2,41 @@
 {% block title %}店舗情報{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4 mb-0">店舗情報</h1>
+    <h1 class="h4 mb-0">{{ '店舗情報（アーカイブ済み）' if show_archived else '店舗情報' }}</h1>
+    {% if not show_archived %}
     <a href="{{ url_for('shops.new') }}" class="btn btn-primary btn-sm">+ 新規登録</a>
+    {% endif %}
 </div>
 
 {% if shops %}
-<div class="list-group">
+<div class="list-group mb-3">
     {% for s in shops %}
-    <a href="{{ url_for('shops.detail', shop_id=s['id']) }}" class="list-group-item list-group-item-action">
+    <div class="list-group-item">
         <div class="d-flex justify-content-between">
-            <div>
+            <a href="{{ url_for('shops.detail', shop_id=s['id']) }}" class="text-decoration-none text-dark flex-grow-1">
                 <div class="fw-bold">{{ s['name'] }}</div>
                 <small class="text-muted">換金 {{ s['exchange_rate'] }}円/枚 ／ 貸出 {{ s['lending_rate'] }}円/枚</small>
-            </div>
+            </a>
             <div class="text-end">
                 <div class="small text-muted">貯玉残高</div>
                 <div class="fw-bold">{{ balances[s['id']] }} 枚</div>
             </div>
         </div>
-    </a>
+        {% if show_archived %}
+        <form method="post" action="{{ url_for('shops.unarchive', shop_id=s['id']) }}" class="mt-2">
+            <button type="submit" class="btn btn-sm btn-outline-primary">一覧に戻す</button>
+        </form>
+        {% endif %}
+    </div>
     {% endfor %}
 </div>
 {% else %}
-<p class="text-muted">まだ店舗が登録されていません。</p>
+<p class="text-muted">{{ 'アーカイブ済みの店舗はありません。' if show_archived else 'まだ店舗が登録されていません。' }}</p>
+{% endif %}
+
+{% if show_archived %}
+<a href="{{ url_for('shops.index') }}">← 一覧に戻る</a>
+{% elif archived_count %}
+<a href="{{ url_for('shops.index', show_archived=1) }}" class="small text-muted">アーカイブ済みの店舗を表示（{{ archived_count }}件）</a>
 {% endif %}
 {% endblock %}

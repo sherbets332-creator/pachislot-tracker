@@ -22,6 +22,9 @@ def create_app(test_config: dict | None = None) -> Flask:
 
     db_module.init_app(app)
 
+    with app.app_context():
+        db_module.ensure_schema_migrations()
+
     from .routes import calendar, machines, records, reports, shops
 
     app.register_blueprint(calendar.bp)

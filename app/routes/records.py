@@ -122,8 +122,8 @@ def new():
         flash("記録を保存しました。")
         return redirect(url_for("calendar.index"))
 
-    shops = db.execute("SELECT * FROM shops ORDER BY name").fetchall()
-    machines = db.execute("SELECT * FROM machines ORDER BY name").fetchall()
+    shops = db.execute("SELECT * FROM shops WHERE is_archived = 0 ORDER BY name").fetchall()
+    machines = db.execute("SELECT * FROM machines WHERE is_archived = 0 ORDER BY name").fetchall()
     default_date = request.args.get("date", "")
     return render_template(
         "records/form.html", record=None, shops=shops, machines=machines,
@@ -147,8 +147,14 @@ def edit(record_id: int):
         return redirect(url_for("calendar.index"))
 
     record = db.execute("SELECT * FROM records WHERE id = ?", (record_id,)).fetchone()
-    shops = db.execute("SELECT * FROM shops ORDER BY name").fetchall()
-    machines = db.execute("SELECT * FROM machines ORDER BY name").fetchall()
+    # アーカイブ済みでも、この記録が現在使っている店舗・機種は選択肢に残す
+    # （でないと編集時に選べず、意図せず別の店舗・機種に変わってしまう）。
+    shops = db.execute(
+        "SELECT * FROM shops WHERE is_archived = 0 OR id = ? ORDER BY name", (record["shop_id"],)
+    ).fetchall()
+    machines = db.execute(
+        "SELECT * FROM machines WHERE is_archived = 0 OR id = ? ORDER BY name", (record["machine_id"],)
+    ).fetchall()
 
     lending_reference = calculate_lending_reference(record["saved_ball_used"], record["lending_rate_used"])
     adjustments = db.execute(

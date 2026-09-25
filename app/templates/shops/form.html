@@ -62,6 +62,30 @@
     <a href="{{ url_for('shops.index') }}" class="btn btn-outline-secondary">戻る</a>
 </form>
 
+{% if shop %}
+<hr class="my-4">
+<div class="d-flex gap-2 flex-wrap">
+    {% if shop['is_archived'] %}
+    <form method="post" action="{{ url_for('shops.unarchive', shop_id=shop['id']) }}">
+        <button type="submit" class="btn btn-outline-primary btn-sm">一覧に戻す</button>
+    </form>
+    {% else %}
+    <form method="post" action="{{ url_for('shops.archive', shop_id=shop['id']) }}"
+          onsubmit="return confirm('アーカイブすると一覧や記録入力の選択肢に出なくなります。記録・貯玉履歴は残ります。よろしいですか？');">
+        <button type="submit" class="btn btn-outline-secondary btn-sm">アーカイブする</button>
+    </form>
+    {% endif %}
+    {% if not has_history %}
+    <form method="post" action="{{ url_for('shops.delete_shop', shop_id=shop['id']) }}"
+          onsubmit="return confirm('この店舗を削除しますか？（記録・貯玉履歴がないため復元はできません）');">
+        <button type="submit" class="btn btn-outline-danger btn-sm">削除</button>
+    </form>
+    {% else %}
+    <span class="small text-muted align-self-center">記録・貯玉履歴があるため削除できません（アーカイブは可能です）。</span>
+    {% endif %}
+</div>
+{% endif %}
+
 <script>
 document.querySelectorAll('[data-target][data-count]').forEach(function (btn) {
     btn.addEventListener('click', function () {

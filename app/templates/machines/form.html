@@ -18,4 +18,28 @@
     <button type="submit" class="btn btn-primary">保存</button>
     <a href="{{ url_for('machines.index') }}" class="btn btn-outline-secondary">戻る</a>
 </form>
+
+{% if machine %}
+<hr class="my-4">
+<div class="d-flex gap-2 flex-wrap">
+    {% if machine['is_archived'] %}
+    <form method="post" action="{{ url_for('machines.unarchive', machine_id=machine['id']) }}">
+        <button type="submit" class="btn btn-outline-primary btn-sm">一覧に戻す</button>
+    </form>
+    {% else %}
+    <form method="post" action="{{ url_for('machines.archive', machine_id=machine['id']) }}"
+          onsubmit="return confirm('アーカイブすると一覧や記録入力の選択肢に出なくなります。記録は残ります。よろしいですか？');">
+        <button type="submit" class="btn btn-outline-secondary btn-sm">アーカイブする</button>
+    </form>
+    {% endif %}
+    {% if not has_history %}
+    <form method="post" action="{{ url_for('machines.delete_machine', machine_id=machine['id']) }}"
+          onsubmit="return confirm('この機種を削除しますか？（記録がないため復元はできません）');">
+        <button type="submit" class="btn btn-outline-danger btn-sm">削除</button>
+    </form>
+    {% else %}
+    <span class="small text-muted align-self-center">記録があるため削除できません（アーカイブは可能です）。</span>
+    {% endif %}
+</div>
+{% endif %}
 {% endblock %}

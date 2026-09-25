@@ -2,20 +2,35 @@
 {% block title %}機種情報{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4 mb-0">機種情報</h1>
+    <h1 class="h4 mb-0">{{ '機種情報（アーカイブ済み）' if show_archived else '機種情報' }}</h1>
+    {% if not show_archived %}
     <a href="{{ url_for('machines.new') }}" class="btn btn-primary btn-sm">+ 新規登録</a>
+    {% endif %}
 </div>
 
 {% if machines %}
-<div class="list-group">
+<div class="list-group mb-3">
     {% for m in machines %}
-    <a href="{{ url_for('machines.edit', machine_id=m['id']) }}" class="list-group-item list-group-item-action">
-        <div class="fw-bold">{{ m['name'] }}</div>
-        {% if m['maker'] %}<small class="text-muted">{{ m['maker'] }}</small>{% endif %}
-    </a>
+    <div class="list-group-item">
+        <a href="{{ url_for('machines.edit', machine_id=m['id']) }}" class="text-decoration-none text-dark">
+            <div class="fw-bold">{{ m['name'] }}</div>
+            {% if m['maker'] %}<small class="text-muted">{{ m['maker'] }}</small>{% endif %}
+        </a>
+        {% if show_archived %}
+        <form method="post" action="{{ url_for('machines.unarchive', machine_id=m['id']) }}" class="mt-2">
+            <button type="submit" class="btn btn-sm btn-outline-primary">一覧に戻す</button>
+        </form>
+        {% endif %}
+    </div>
     {% endfor %}
 </div>
 {% else %}
-<p class="text-muted">まだ機種が登録されていません。</p>
+<p class="text-muted">{{ 'アーカイブ済みの機種はありません。' if show_archived else 'まだ機種が登録されていません。' }}</p>
+{% endif %}
+
+{% if show_archived %}
+<a href="{{ url_for('machines.index') }}">← 一覧に戻る</a>
+{% elif archived_count %}
+<a href="{{ url_for('machines.index', show_archived=1) }}" class="small text-muted">アーカイブ済みの機種を表示（{{ archived_count }}件）</a>
 {% endif %}
 {% endblock %}

@@ -19,10 +19,12 @@ CREATE TABLE IF NOT EXISTS shops (
     memo                TEXT,
     external_source_url TEXT,                            -- 将来：スクレイピング対象URL
     external_source_id  TEXT,                            -- 将来：取得元サイトでの店舗識別子
+    is_archived         INTEGER NOT NULL DEFAULT 0,       -- 1=アーカイブ済み（一覧・選択肢からは隠すが、記録は残す）
     created_at          TEXT    NOT NULL DEFAULT (datetime('now', 'localtime')),
     updated_at          TEXT    NOT NULL DEFAULT (datetime('now', 'localtime')),
     CHECK (exchange_rate > 0),
-    CHECK (lending_rate > 0)
+    CHECK (lending_rate > 0),
+    CHECK (is_archived IN (0, 1))
 );
 
 -- =========================================================
@@ -33,8 +35,10 @@ CREATE TABLE IF NOT EXISTS machines (
     name        TEXT    NOT NULL UNIQUE,
     maker       TEXT,
     memo        TEXT,
+    is_archived INTEGER NOT NULL DEFAULT 0,       -- 1=アーカイブ済み（一覧・選択肢からは隠すが、記録は残す）
     created_at  TEXT    NOT NULL DEFAULT (datetime('now', 'localtime')),
-    updated_at  TEXT    NOT NULL DEFAULT (datetime('now', 'localtime'))
+    updated_at  TEXT    NOT NULL DEFAULT (datetime('now', 'localtime')),
+    CHECK (is_archived IN (0, 1))
 );
 
 -- =========================================================
