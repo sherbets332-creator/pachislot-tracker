@@ -78,6 +78,7 @@ def check_balance_never_negative(
     proposed: list[tuple[str, str, int]],
     *,
     exclude_record_id: int | None = None,
+    exclude_transaction_id: int | None = None,
 ) -> None:
     """この変更を反映した場合に、貯玉残高が一度でもマイナスになるかを検証する。
 
@@ -88,6 +89,8 @@ def check_balance_never_negative(
       ball_count は 'adjust' のみ符号付き、それ以外（use/earn/cashout）は正の値。
     exclude_record_id: 記録の編集時、その記録が持つ既存の use/earn 行を計算から除外する
       （新しい値で作り直した proposed に置き換えるため）。
+    exclude_transaction_id: 換金・残高調整（cashout/adjust）の編集・削除時、その行自体を
+      計算から除外する（record_id を持たないため exclude_record_id では除外できない）。
     """
     query = (
         "SELECT transaction_date, id, transaction_type, ball_count "
@@ -97,6 +100,9 @@ def check_balance_never_negative(
     if exclude_record_id is not None:
         query += " AND (record_id IS NULL OR record_id != ?)"
         params.append(exclude_record_id)
+    if exclude_transaction_id is not None:
+        query += " AND id != ?"
+        params.append(exclude_transaction_id)
     rows = db.execute(query, params).fetchall()
 
     max_id = max((row["id"] for row in rows), default=0)

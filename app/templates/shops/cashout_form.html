@@ -1,27 +1,39 @@
 {% extends "base.html" %}
-{% block title %}貯玉換金 - {{ shop['name'] }}{% endblock %}
+{% block title %}貯玉換金{{ '編集' if transaction else 'の記録' }} - {{ shop['name'] }}{% endblock %}
 {% block content %}
-<h1 class="h4 mb-3">貯玉換金の記録（{{ shop['name'] }}）</h1>
+<h1 class="h4 mb-3">貯玉換金{{ '編集' if transaction else 'の記録' }}（{{ shop['name'] }}）</h1>
 <p class="text-muted small">現在の貯玉残高：{{ balance }}枚</p>
-<form method="post">
+<form method="post"
+      action="{{ url_for('shops.edit_transaction', shop_id=shop['id'], tx_id=transaction['id']) if transaction else url_for('shops.cashout', shop_id=shop['id']) }}">
     <div class="mb-3">
         <label class="form-label">日付</label>
-        <input type="date" name="transaction_date" class="form-control" required>
+        <input type="date" name="transaction_date" class="form-control" required
+               value="{{ transaction['transaction_date'] if transaction else '' }}">
     </div>
     <div class="mb-3">
         <label class="form-label">換金枚数</label>
-        <input type="number" name="ball_count" class="form-control" required min="1">
+        <input type="number" name="ball_count" class="form-control" required min="1"
+               value="{{ transaction['ball_count'] if transaction else '' }}">
     </div>
     <div class="mb-3">
         <label class="form-label">受取現金額（円）</label>
-        <input type="number" name="cash_amount" class="form-control" required min="0">
+        <input type="number" name="cash_amount" class="form-control" required min="0"
+               value="{{ transaction['cash_amount'] if transaction else '' }}">
         <div class="form-text">実際に受け取った金額をそのまま入力（計算はしない）。</div>
     </div>
     <div class="mb-3">
         <label class="form-label">メモ</label>
-        <textarea name="memo" class="form-control" rows="2"></textarea>
+        <textarea name="memo" class="form-control" rows="2">{{ transaction['memo'] if transaction else '' }}</textarea>
     </div>
-    <button type="submit" class="btn btn-primary">記録する</button>
+    <button type="submit" class="btn btn-primary">{{ '更新する' if transaction else '記録する' }}</button>
     <a href="{{ url_for('shops.detail', shop_id=shop['id']) }}" class="btn btn-outline-secondary">戻る</a>
+    {% if transaction %}
+    <button type="submit" form="delete-tx-form" class="btn btn-outline-danger float-end"
+            onclick="return confirm('この換金履歴を削除しますか？');">削除</button>
+    {% endif %}
 </form>
+{% if transaction %}
+<form id="delete-tx-form" method="post"
+      action="{{ url_for('shops.delete_transaction', shop_id=shop['id'], tx_id=transaction['id']) }}"></form>
+{% endif %}
 {% endblock %}

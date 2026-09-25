@@ -57,7 +57,7 @@
 <h2 class="h6">貯玉増減履歴</h2>
 <div class="table-responsive">
 <table class="table table-sm">
-    <thead><tr><th>日付</th><th>種別</th><th>枚数</th><th>備考</th></tr></thead>
+    <thead><tr><th>日付</th><th>種別</th><th>枚数</th><th>備考</th><th>操作</th></tr></thead>
     <tbody>
     {% for t in ledger %}
         <tr>
@@ -68,6 +68,13 @@
                 {% if t['machine_name'] %}{{ t['machine_name'] }}{% endif %}
                 {% if t['cash_amount'] %}／受取{{ t['cash_amount'] }}円{% endif %}
                 {% if t['memo'] %}／{{ t['memo'] }}{% endif %}
+            </td>
+            <td class="small">
+                {% if t['transaction_type'] in ('cashout', 'adjust') %}
+                <a href="{{ url_for('shops.edit_transaction', shop_id=shop['id'], tx_id=t['id']) }}">編集</a>
+                {% elif t['record_id'] %}
+                <a href="{{ url_for('records.edit', record_id=t['record_id']) }}">記録を編集</a>
+                {% endif %}
             </td>
         </tr>
     {% endfor %}
