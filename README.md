@@ -7,7 +7,7 @@
 venvは作成済み・Flaskはインストール済みです。DBを初期化する場合：
 
 ```
-cd C:\Users\sherb\mulmoclaude\github\pachislot-tracker
+cd <このリポジトリのパス>
 venv\Scripts\python -m flask --app run.py init-db
 ```
 
@@ -16,7 +16,7 @@ venv\Scripts\python -m flask --app run.py init-db
 ## 起動方法
 
 ```
-cd C:\Users\sherb\mulmoclaude\github\pachislot-tracker
+cd <このリポジトリのパス>
 venv\Scripts\python run.py
 ```
 
