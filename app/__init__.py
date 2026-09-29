@@ -35,12 +35,13 @@ def create_app(test_config: dict | None = None) -> Flask:
     with app.app_context():
         db_module.ensure_schema_migrations()
 
-    from .routes import calendar, machines, records, reports, shops
+    from .routes import calendar, machines, records, reports, settings, shops
 
     app.register_blueprint(calendar.bp)
     app.register_blueprint(records.bp)
     app.register_blueprint(reports.bp)
     app.register_blueprint(shops.bp)
     app.register_blueprint(machines.bp)
+    app.register_blueprint(settings.bp)
 
     return app

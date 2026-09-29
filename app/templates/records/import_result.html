@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}CSVインポート結果{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">CSVインポート結果</h1>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <p class="mb-1">全{{ result.total_rows }}行のうち <span class="fw-bold">{{ result.imported }}件</span> を取り込みました。</p>
+        {% if result.skipped_duplicates %}
+        <p class="mb-1 text-muted">{{ result.skipped_duplicates|length }}件は同じ日付・店舗・機種の記録が既にあったためスキップしました。</p>
+        {% endif %}
+        {% if result.errors %}
+        <p class="mb-0 text-danger">{{ result.errors|length }}件のエラーがありスキップしました。</p>
+        {% endif %}
+    </div>
+</div>
+
+{% if result.created_shops %}
+<div class="mb-3">
+    <p class="fw-bold mb-1">新規登録した店舗（{{ result.created_shops|length }}件）</p>
+    <p class="small text-muted">{{ result.created_shops|join('、') }}</p>
+</div>
+{% endif %}
+
+{% if result.created_machines %}
+<div class="mb-3">
+    <p class="fw-bold mb-1">新規登録した機種（{{ result.created_machines|length }}件）</p>
+    <p class="small text-muted">{{ result.created_machines|join('、') }}</p>
+</div>
+{% endif %}
+
+{% if result.skipped_duplicates %}
+<div class="mb-3">
+    <p class="fw-bold mb-1">スキップした行（既存の記録と重複）</p>
+    <ul class="list-group">
+        {% for dup in result.skipped_duplicates %}
+        <li class="list-group-item small">{{ dup }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% if result.errors %}
+<div class="mb-3">
+    <p class="fw-bold mb-1">エラー行</p>
+    <ul class="list-group">
+        {% for err in result.errors %}
+        <li class="list-group-item small">{{ err.line_no }}行目: {{ err.message }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<a href="{{ url_for('calendar.index') }}" class="btn btn-primary">カレンダーで確認する</a>
+<a href="{{ url_for('records.import_csv') }}" class="btn btn-outline-secondary">もう一度インポートする</a>
+{% endblock %}

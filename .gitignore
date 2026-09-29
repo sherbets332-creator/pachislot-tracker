@@ -1,6 +1,6 @@
 venv/
 __pycache__/
 *.pyc
-data/*.db
-data/*.db-wal
-data/*.db-shm
+# dataフォルダは本番DB・バックアップ・その他実行時生成物が入るため丸ごと除外する
+# （data/*.dbだけだとdata/backup/配下のようなサブフォルダのDBファイルを拾えないため）。
+data/

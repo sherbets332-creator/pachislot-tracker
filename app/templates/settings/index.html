@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}その他{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">その他</h1>
+
+<div class="list-group mb-3">
+    <a href="{{ url_for('records.import_csv') }}" class="list-group-item">
+        <div class="fw-bold">CSVから記録を取り込む</div>
+        <small class="text-muted">過去の記録をCSVファイルから一括登録します</small>
+    </a>
+</div>
+
+<p class="text-muted small">スクレイピング設定は未実装です。</p>
+{% endblock %}

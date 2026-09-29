@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}CSVインポート{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">CSVから記録を取り込む</h1>
+
+<form method="post" enctype="multipart/form-data" class="mb-4">
+    <div class="mb-3">
+        <label for="csv_file" class="form-label">CSVファイル</label>
+        <input type="file" name="csv_file" id="csv_file" accept=".csv" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-primary">取り込む</button>
+</form>
+
+<div class="card">
+    <div class="card-body small text-muted">
+        <p class="fw-bold mb-1">対応している列（見出し）</p>
+        <p class="mb-2"><code>日付,店舗コード,店舗,メーカー,機種コード,機種,台番号,投資額,回収額,収支,メモ,稼働時間,時給</code></p>
+        <ul class="mb-2">
+            <li>日付は <code>YYYY/MM/DD</code> または <code>YYYY-MM-DD</code> 形式に対応しています。</li>
+            <li>店舗・機種はこの見出しの名前で検索し、未登録の名前は自動で新規登録します（店舗は換金・貸出レート20円/枚で仮登録するので、実際のレートと違う場合は後で店舗情報から修正してください）。</li>
+            <li>店舗名・機種名が空欄の行は「不明」として取り込みます。</li>
+            <li>貯玉の獲得・使用はこのCSVには無いため、すべて0枚として取り込みます（貯玉台帳は変化しません）。</li>
+            <li>稼働時間・時給の列はこのアプリにデータ項目が無いため取り込みません。</li>
+        </ul>
+        <p class="mb-0">取り込み後、行ごとの取り込み結果（成功件数・エラー内容）を表示します。</p>
+    </div>
+</div>
+{% endblock %}

@@ -4,7 +4,7 @@ import sqlite3
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 
 from ..db import get_db
-from ..services import saved_ball_ledger
+from ..services import csv_import, saved_ball_ledger
 from ..services.profit_calculator import calculate_lending_reference, calculate_profit
 from ..services.saved_ball_realization import recalculate_shop_ledger
 from ..services.validation import (
@@ -196,6 +196,24 @@ def delete(record_id: int):
     recalculate_shop_ledger(db, record["shop_id"])
     flash("記録を削除しました。")
     return redirect(url_for("calendar.index"))
+
+
+@bp.route("/import", methods=["GET", "POST"])
+def import_csv():
+    if request.method == "POST":
+        file = request.files.get("csv_file")
+        if file is None or file.filename == "":
+            flash("CSVファイルを選択してください。")
+            return redirect(url_for("records.import_csv"))
+        db = get_db()
+        try:
+            result = csv_import.import_records_csv(db, file.read())
+        except csv_import.CsvFormatError as e:
+            flash(str(e))
+            return redirect(url_for("records.import_csv"))
+        return render_template("records/import_result.html", result=result, active_nav="other")
+
+    return render_template("records/import_form.html", active_nav="other")
 
 
 @bp.route("/day/<date>")
